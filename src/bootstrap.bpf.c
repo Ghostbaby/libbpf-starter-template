@@ -110,3 +110,72 @@ int handle_exit(struct trace_event_raw_sched_process_template* ctx)
 	return 0;
 }
 
+#define TASK_COMM_LEN 16
+
+struct {
+    __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+    __uint(max_entries, 1);
+    __type(key, u32);
+    __type(value, char[TASK_COMM_LEN]);
+} comm_buf SEC(".maps");
+
+// 该 prog 用于拦截 do_unlinkat 系统调用，当删除文件时，打印文件名和进程名
+SEC("kprobe/do_unlinkat")
+int BPF_KPROBE(do_unlinkat, int dfd, struct filename *name)
+{
+    const char *filename;
+    __u64 pid_tgid = bpf_get_current_pid_tgid();
+    __u32 pid = (pid_tgid << 32) >> 32;
+    __u32 tgid = pid_tgid >> 32;
+    long ret;
+
+	u32 key = 0;
+    char *comm = bpf_map_lookup_elem(&comm_buf, &key);
+    if (!comm)
+        return 0;
+
+    filename = BPF_CORE_READ(name, name);
+
+    bpf_get_current_comm(comm, TASK_COMM_LEN);
+    bpf_printk("KPROBE ENTRY pid = %d, filename = %s\n", pid, filename);
+    return 8;
+}  
+
+
+struct tp_event
+{
+    __u32 pid;
+    __u32 tpid;
+    __u32 sig;
+    char comm[TASK_COMM_LEN];
+    __u32 syscall_nr;
+};
+
+struct {
+    __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+    __uint(max_entries, 1024);
+    __type(key, u32);
+    __type(value, struct event);
+} map SEC(".maps");
+
+
+SEC("tp/syscalls/sys_enter_kill")
+int sig_kill_entry(struct trace_event_raw_sys_enter *ctx)
+{
+	struct tp_event eve;
+
+	
+	bpf_get_current_comm(eve.comm, TASK_COMM_LEN);
+
+	__u64 pid_tgid = bpf_get_current_pid_tgid();
+	__u32 tgid = pid_tgid >> 32;
+	
+	eve.pid = (pid_tgid << 32) >> 32;
+	eve.syscall_nr = ctx->id;
+	eve.tpid = ctx->args[0];
+	eve.sig = ctx->args[1];
+
+	bpf_map_update_elem(&map, &tgid, &eve, BPF_ANY);
+	
+	return 0;
+}

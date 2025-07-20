@@ -1,0 +1,61 @@
+
+bpf_nossp.o:	file format elf64-bpf
+
+RELOCATION RECORDS FOR [.debug_info]:
+OFFSET           TYPE                     VALUE
+0000000000000008 R_BPF_64_ABS32           .debug_abbrev
+0000000000000011 R_BPF_64_ABS32           .debug_str_offsets
+0000000000000015 R_BPF_64_ABS32           .debug_line
+000000000000001f R_BPF_64_ABS32           .debug_addr
+
+RELOCATION RECORDS FOR [.debug_str_offsets]:
+OFFSET           TYPE                     VALUE
+0000000000000008 R_BPF_64_ABS32           .debug_str
+000000000000000c R_BPF_64_ABS32           .debug_str
+0000000000000010 R_BPF_64_ABS32           .debug_str
+0000000000000014 R_BPF_64_ABS32           .debug_str
+0000000000000018 R_BPF_64_ABS32           .debug_str
+000000000000001c R_BPF_64_ABS32           .debug_str
+0000000000000020 R_BPF_64_ABS32           .debug_str
+0000000000000024 R_BPF_64_ABS32           .debug_str
+0000000000000028 R_BPF_64_ABS32           .debug_str
+000000000000002c R_BPF_64_ABS32           .debug_str
+
+RELOCATION RECORDS FOR [.debug_addr]:
+OFFSET           TYPE                     VALUE
+0000000000000008 R_BPF_64_ABS64           _license
+0000000000000010 R_BPF_64_ABS64           kprobe/test
+
+RELOCATION RECORDS FOR [.BTF]:
+OFFSET           TYPE                     VALUE
+00000000000000ac R_BPF_64_NODYLD32        _license
+
+RELOCATION RECORDS FOR [.BTF.ext]:
+OFFSET           TYPE                     VALUE
+000000000000002c R_BPF_64_NODYLD32        kprobe/test
+0000000000000040 R_BPF_64_NODYLD32        kprobe/test
+0000000000000050 R_BPF_64_NODYLD32        kprobe/test
+0000000000000060 R_BPF_64_NODYLD32        kprobe/test
+0000000000000070 R_BPF_64_NODYLD32        kprobe/test
+0000000000000080 R_BPF_64_NODYLD32        kprobe/test
+0000000000000090 R_BPF_64_NODYLD32        kprobe/test
+00000000000000a0 R_BPF_64_NODYLD32        kprobe/test
+00000000000000b0 R_BPF_64_NODYLD32        kprobe/test
+00000000000000c0 R_BPF_64_NODYLD32        kprobe/test
+00000000000000d0 R_BPF_64_NODYLD32        kprobe/test
+00000000000000e0 R_BPF_64_NODYLD32        kprobe/test
+00000000000000f0 R_BPF_64_NODYLD32        kprobe/test
+0000000000000100 R_BPF_64_NODYLD32        kprobe/test
+0000000000000110 R_BPF_64_NODYLD32        kprobe/test
+0000000000000120 R_BPF_64_NODYLD32        kprobe/test
+
+RELOCATION RECORDS FOR [.debug_frame]:
+OFFSET           TYPE                     VALUE
+0000000000000014 R_BPF_64_ABS32           .debug_frame
+0000000000000018 R_BPF_64_ABS64           kprobe/test
+
+RELOCATION RECORDS FOR [.debug_line]:
+OFFSET           TYPE                     VALUE
+0000000000000022 R_BPF_64_ABS32           .debug_line_str
+000000000000002e R_BPF_64_ABS32           .debug_line_str
+0000000000000048 R_BPF_64_ABS64           kprobe/test

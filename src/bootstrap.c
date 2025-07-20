@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/resource.h>
+#include <string.h>
+#include <errno.h>
 #include <bpf/libbpf.h>
 #include "bootstrap.h"
 #include "bootstrap.skel.h"
@@ -146,6 +148,13 @@ int main(int argc, char **argv)
 		err = -1;
 		fprintf(stderr, "Failed to create ring buffer\n");
 		goto cleanup;
+	}
+
+	/* Increase memory lock limit */
+	struct rlimit rlim_new = {RLIM_INFINITY, RLIM_INFINITY};
+	if (setrlimit(RLIMIT_MEMLOCK, &rlim_new)) {
+		fprintf(stderr, "Failed to increase RLIMIT_MEMLOCK: %s\n", strerror(errno));
+		return 1;
 	}
 
 	/* Process events */
