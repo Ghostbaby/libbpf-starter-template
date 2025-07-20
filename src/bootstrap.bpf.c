@@ -155,7 +155,7 @@ struct {
     __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
     __uint(max_entries, 1024);
     __type(key, u32);
-    __type(value, struct event);
+    __type(value, struct tp_event);
 } map SEC(".maps");
 
 
