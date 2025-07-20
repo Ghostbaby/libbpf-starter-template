@@ -145,7 +145,7 @@ int BPF_KPROBE(do_unlinkat, int dfd, struct filename *name)
 #define MAX_ENTRIES 10240
 #define TASK_COMM_LEN 16
 
-struct event {
+struct tp_event {
  unsigned int pid;
  unsigned int tpid;
  int sig;
@@ -157,14 +157,14 @@ struct {
 	__uint(type, BPF_MAP_TYPE_HASH);
 	__uint(max_entries, MAX_ENTRIES);
 	__type(key, __u32);
-	__type(value, struct event);
+	__type(value, struct tp_event);
 } values SEC(".maps");
 
 
 SEC("tracepoint/syscalls/sys_enter_kill")
 int kill_entry(struct trace_event_raw_sys_enter *ctx)
 {
-	struct event event;
+	struct tp_event event;
 
 	 __u64 pid_tgid = bpf_get_current_pid_tgid();
 	 __u32 tid = (__u32)pid_tgid;
@@ -182,7 +182,7 @@ int kill_entry(struct trace_event_raw_sys_enter *ctx)
 SEC("tracepoint/syscalls/sys_exit_kill")
 int kill_exit(struct trace_event_raw_sys_exit *ctx)
 {
-	struct event *eventp;
+	struct tp_event *eventp;
 
 	 __u64 pid_tgid = bpf_get_current_pid_tgid();
 	 __u32 tid = (__u32)pid_tgid;
