@@ -142,40 +142,64 @@ int BPF_KPROBE(do_unlinkat, int dfd, struct filename *name)
 }  
 
 
-struct tp_event
-{
-    __u32 pid;
-    __u32 tpid;
-    __u32 sig;
-    char comm[TASK_COMM_LEN];
-    __u32 syscall_nr;
+#define MAX_ENTRIES 10240
+#define TASK_COMM_LEN 16
+
+struct event {
+ unsigned int pid;
+ unsigned int tpid;
+ int sig;
+ int ret;
+ char comm[TASK_COMM_LEN];
 };
 
 struct {
-    __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
-    __uint(max_entries, 1024);
-    __type(key, u32);
-    __type(value, struct tp_event);
-} map SEC(".maps");
+	__uint(type, BPF_MAP_TYPE_HASH);
+	__uint(max_entries, MAX_ENTRIES);
+	__type(key, __u32);
+	__type(value, struct event);
+} values SEC(".maps");
 
 
-SEC("tp/syscalls/sys_enter_kill")
-int sig_kill_entry(struct trace_event_raw_sys_enter *ctx)
+SEC("tracepoint/syscalls/sys_enter_kill")
+int kill_entry(struct trace_event_raw_sys_enter *ctx)
 {
-	struct tp_event eve;
+	struct event event;
 
-	
-	bpf_get_current_comm(eve.comm, TASK_COMM_LEN);
+	 __u64 pid_tgid = bpf_get_current_pid_tgid();
+	 __u32 tid = (__u32)pid_tgid;
+	 event.pid = pid_tgid >> 32;
+	 event.tpid = (pid_t)ctx->args[0];
+	 event.sig = (int)ctx->args[1];;
+	 bpf_get_current_comm(event.comm, sizeof(event.comm));
+	 
+	 bpf_map_update_elem(&values, &tid, &event, BPF_ANY);
 
-	__u64 pid_tgid = bpf_get_current_pid_tgid();
-	__u32 tgid = pid_tgid >> 32;
-	
-	eve.pid = (pid_tgid << 32) >> 32;
-	eve.syscall_nr = ctx->id;
-	eve.tpid = ctx->args[0];
-	eve.sig = ctx->args[1];
 
-	bpf_map_update_elem(&map, &tgid, &eve, BPF_ANY);
-	
-	return 0;
+	 return 0;
+}
+
+SEC("tracepoint/syscalls/sys_exit_kill")
+int kill_exit(struct trace_event_raw_sys_exit *ctx)
+{
+	struct event *eventp;
+
+	 __u64 pid_tgid = bpf_get_current_pid_tgid();
+	 __u32 tid = (__u32)pid_tgid;
+
+	 eventp = bpf_map_lookup_elem(&values, &tid);
+	 if (!eventp)
+	 	return 0;
+
+	 eventp->ret = ctx->ret;
+	 bpf_printk("PID %d (%s) sent signal %d ",
+	           eventp->pid, eventp->comm, eventp->sig);
+	 bpf_printk("to PID %d, ret = %d",
+	           eventp->tpid, eventp->ret);
+
+cleanup:
+	bpf_map_delete_elem(&values, &tid);
+
+
+	 return 0;
 }
